@@ -1,0 +1,3 @@
+This script reads its standard input and writes to its standard output whatever it read, with
+all occurrences of its first argument replaced with its second argument. Called as follows,
+it will place in outfile a copy of infile with all occurrences of zero replaced by 0:

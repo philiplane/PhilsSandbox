@@ -1,0 +1,477 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <FileVersion>
+    <Major>1</Major>
+    <Minor>0</Minor>
+    <Patch>0</Patch>
+  </FileVersion>
+  <SDKVersion>
+    <Major>2</Major>
+    <Minor>1</Minor>
+    <Patch>0</Patch>
+  </SDKVersion>
+  <Name>NMEA2000test</Name>
+  <Services>
+    <Service>
+      <Name>NMEA2000test</Name>
+      <SIN>129</SIN>
+      <Properties>
+        <Property xsi:type="UnsignedIntProperty">
+          <Name>reportInterval</Name>
+          <Description>send data report at this interval in minutes</Description>
+          <PIN>1</PIN>
+          <Value>30</Value>
+          <Maximum>1440</Maximum>
+          <Minimum>5</Minimum>
+        </Property>
+        <Property xsi:type="UnsignedIntProperty">
+          <Name>checkInterval</Name>
+          <Description>check for data at this interval in 10th of a secon</Description>
+          <PIN>2</PIN>
+          <Value>150</Value>
+          <Maximum>1000</Maximum>
+          <Minimum>10</Minimum>
+        </Property>
+        <Property xsi:type="UnsignedIntProperty">
+          <Name>windSpeed</Name>
+          <Description>speed in m/s</Description>
+          <PIN>3</PIN>
+          <Maximum>65535</Maximum>
+        </Property>
+        <Property xsi:type="UnsignedIntProperty">
+          <Name>windAngle</Name>
+          <Description>angle in radians</Description>
+          <PIN>4</PIN>
+          <Maximum>65535</Maximum>
+        </Property>
+        <Property xsi:type="EnumProperty">
+          <Name>windReference</Name>
+          <PIN>5</PIN>
+          <Items>
+            <string>True (ground referenced to North)</string>
+            <string>Magnetic</string>
+            <string>Apparent</string>
+            <string>True (boat referenced)</string>
+            <string>True (water referenced)</string>
+          </Items>
+        </Property>
+        <Property xsi:type="UnsignedIntProperty">
+          <Name>temperature</Name>
+          <Description>in 1/100 kelvin</Description>
+          <PIN>6</PIN>
+          <Maximum>65535</Maximum>
+        </Property>
+        <Property xsi:type="EnumProperty">
+          <Name>temperatureSource</Name>
+          <PIN>7</PIN>
+          <Items>
+            <string>Sea Temperature</string>
+            <string>Outside Temperature</string>
+            <string>Inside Temperature</string>
+            <string>Engine Room Temperature</string>
+            <string>Main Cabin Temperature</string>
+            <string>Live Well Temperature</string>
+            <string>Bait Well Temperature</string>
+            <string>Refridgeration Temperature</string>
+            <string>Heating System Temperature</string>
+            <string>Freezer Temperature</string>
+          </Items>
+        </Property>
+        <Property xsi:type="UnsignedIntProperty">
+          <Name>pressure</Name>
+          <Description>pressure in 1/10 Pascal</Description>
+          <PIN>8</PIN>
+          <Maximum>16777215</Maximum>
+        </Property>
+        <Property xsi:type="EnumProperty">
+          <Name>pressureSource</Name>
+          <PIN>9</PIN>
+          <Items>
+            <string>Atmospheric pressure</string>
+            <string>Water pressure</string>
+            <string>Steam pressure</string>
+            <string>Compressed air pressure</string>
+            <string>Hydraulic pressure</string>
+            <string>Generic source pressure</string>
+          </Items>
+        </Property>
+        <Property xsi:type="EnumProperty">
+          <Name>fluidType</Name>
+          <PIN>10</PIN>
+          <Items>
+            <string>Fuel</string>
+            <string>Water</string>
+            <string>Grey water</string>
+            <string>Live well</string>
+            <string>Oil</string>
+            <string>Black water</string>
+          </Items>
+        </Property>
+        <Property xsi:type="UnsignedIntProperty">
+          <Name>fluidLevel</Name>
+          <PIN>11</PIN>
+          <Maximum>65535</Maximum>
+        </Property>
+        <Property xsi:type="UnsignedIntProperty">
+          <Name>fluidCapacity</Name>
+          <PIN>12</PIN>
+        </Property>
+        <Property xsi:type="DataProperty">
+          <Name>pgn130306</Name>
+          <PIN>106</PIN>
+        </Property>
+      </Properties>
+      <ForwardMessages>
+        <Message>
+          <Name>getWindReport</Name>
+          <MIN>1</MIN>
+        </Message>
+        <Message>
+          <Name>getPgn</Name>
+          <MIN>2</MIN>
+          <Fields>
+            <Field xsi:type="UnsignedIntField">
+              <Name>pgn</Name>
+              <Size>18</Size>
+            </Field>
+          </Fields>
+        </Message>
+      </ForwardMessages>
+      <ReturnMessages>
+        <Message>
+          <Name>windReport</Name>
+          <MIN>1</MIN>
+          <Fields>
+            <Field xsi:type="PropertyField">
+              <Name>windSpeed</Name>
+              <SIN>129</SIN>
+              <PIN>3</PIN>
+            </Field>
+            <Field xsi:type="PropertyField">
+              <Name>windAngle</Name>
+              <SIN>129</SIN>
+              <PIN>4</PIN>
+            </Field>
+            <Field xsi:type="PropertyField">
+              <Name>windReference</Name>
+              <SIN>129</SIN>
+              <PIN>5</PIN>
+            </Field>
+          </Fields>
+        </Message>
+        <Message>
+          <Name>pgnReport</Name>
+          <MIN>2</MIN>
+          <Fields>
+            <Field xsi:type="UnsignedIntField">
+              <Name>pgn</Name>
+              <Size>18</Size>
+            </Field>
+            <Field xsi:type="DataField">
+              <Name>pgnData</Name>
+              <Size>64</Size>
+            </Field>
+          </Fields>
+        </Message>
+      </ReturnMessages>
+      <SourceFiles>
+        <SourceFile>
+          <Name>main.lua</Name>
+          <Source>--
+-- Service: NMEA2000test
+-- Modified: 2015-06-30
+--
+module(..., package.seeall)
+--
+-- Version information (required)
+--
+_VERSION = "1.0.7"
+--
+-- Changes: separated methods into separate source files
+--
+--
+-- Service Enumerations.
+--
+PGNS = makeEnum({'WIND_PGN','TEMPERATURE_PGN','PRESSURE_PGN','FLUID_LEVEL_PGN', 'ENGINE_PARAMETERS_PGN', 'UNKNOWN_PGN'})
+--
+-- Service Constants
+--
+-- Parameter group numbers (PGNs)
+WIND_PGN              = 130306
+TEMPERATURE_PGN       = 130312
+PRESSURE_PGN          = 130314
+FLUID_LEVEL_PGN       = 127505
+ENGINE_PARAMETERS_PGN = 127489
+--
+-- Service Globals.
+--
+PGN_DATA = sys.createTable(5,0)
+messageHandle      = nil
+canPort            = nil
+
+local checkTimer
+local reportTimer
+local msgQ         
+local checkTimer  = sys.timer.create()
+local reportTimer = sys.timer.create()
+
+
+function checkTimerExpired()
+  checkCAN()
+  checkTimer:arm(properties.checkInterval)
+end
+
+function reportTimerExpired()
+  sendReport(1)
+  reportTimer:arm(properties.reportInterval * 600)
+end
+
+function entry()
+  print(_NAME, ": service started")
+  PGN_DATA[PGNS.UNKNOWN_PGN] = {0}
+  msgQ = sched.createEventQ(1, messageHandle, 'RX_DECODED')
+  checkTimer:arm(properties.checkInterval)
+  reportTimer:arm(properties.reportInterval * 600)
+
+  if (sys.J1939) then
+    -- open J1939 interface
+    canPort, errMsg = sys.J1939.open()
+    if (canPort) then
+      print(_NAME, ": CAN port open")
+      j1939AddPGNs()
+    else
+      -- opened by others
+      print(errMsg)
+    end
+  end
+  
+  local checkTimerQ = sched.createEventQ(1, '_TIMER', checkTimer)
+  local reportTimerQ = sched.createEventQ(1, '_TIMER', reportTimer)
+  while true do
+    local q, event, args = sched.waitQ(-1, msgQ,  checkTimerQ, reportTimerQ)
+    if q == checkTimerQ then
+      checkTimerExpired()
+    elseif q == reportTimerQ then
+      reportTimerExpired()
+    elseif q == msgQ then
+      tracef("** [D] %s - %s: ... calling processFwdMessages", os.date(), _NAME)
+      processFwdMessages(args)
+    end
+  end
+end
+
+function init()
+  messageHandle = svc.message.register(_SIN)
+  if not messageHandle then
+    svc.log.addDbgLog(svc.log.CRITICAL, string.format("%s SIN already registered", _NAME))
+  end
+  
+    for _, fileName in ipairs({'decoders', 'ota', 'can'}) do
+    -- load external code file.
+    local res, err = svcmgr.loadCode(fileName .. '.lua')
+
+    -- validate that the code file was loaded properly.
+    if (res == nil) then
+       err = err or "could not load file '" .. fileName .. ".lua'"
+    elseif (type(res) ~= 'function') then
+       err = "file '" .. fileName .. ".lua' is invalid [1]"
+    else
+      -- execute external code file.
+      res, err = pcall(res)
+    end
+  end
+  
+end
+
+</Source>
+        </SourceFile>
+        <SourceFile>
+          <Name>decoders.lua</Name>
+          <Source>
+function decodeWindData(inData)
+  PGN_DATA[PGNS.WIND_PGN] = inData
+  local SID = inData:byte(1)
+  local speed = bit32.bor(bit32.lshift(inData:byte(3),8),inData:byte(2))
+  properties.windSpeed = speed
+  speed = speed * 0.01943844
+  local angle = bit32.bor(bit32.lshift(inData:byte(5),8),inData:byte(4))
+  properties.windAngle = angle
+  angle = angle * 0.005729578
+  local reference = bit32.band(0x07,inData:byte(6))
+  properties.windReference = reference
+  printf("Wind data:\n SID = %d\n Speed = %3.2f knots\n Angle = %3.2f deg\n Reference = %d\n",SID, speed, angle, reference)
+end
+
+function decodeTemperatureData(inData)
+  PGN_DATA[PGNS.TEMPERATURE_PGN] = inData
+  local SID = inData:byte(1)
+  local tempInstance = inData:byte(2)
+  local tempSource = inData:byte(3)
+  properties.temperatureSource = tempSource
+  local temperature = bit32.bor(bit32.lshift(inData:byte(5),8),inData:byte(4))
+  properties.temperature = temperature
+  temperature = (temperature * 0.01) - 273.15
+  local tempSet = bit32.bor(bit32.lshift(inData:byte(7),8),inData:byte(6)) 
+  printf("Temperature data:\n SID = %d\n instance = %d\n source = %d\n temperature = %3.2f C\n",SID, tempInstance, tempSource, temperature)
+end
+
+function decodePressureData(inData)
+  PGN_DATA[PGNS.PRESSURE_PGN] = inData
+  local SID = inData:byte(1)
+  local pressInstance = bit32.band(0x0F,bit32.rshift(inData:byte(2),4))
+  local pressSource = bit32.band(0x0F,inData:byte(2))
+  properties.pressureSource = pressSource
+  local pressure = bit32.bor(bit32.lshift(inData:byte(5),8),inData:byte(4))
+  pressure = bit32.bor(bit32.lshift(inData:byte(6),16),pressure)
+  properties.pressure = pressure
+  pressure = pressure * 0.001
+  printf("Pressure data:\n SID = %d\n instance = %d\n source = %d\n pressure = %3.2f mBar\n",SID, pressInstance, pressSource, pressure)
+end
+
+function decodeFluidLevel(inData)
+  PGN_DATA[PGNS.FLUID_LEVEL_PGN] = inData
+  local fluidInstance = bit32.band(0x0F,bit32.rshift(inData:byte(2),1))
+  local fluidType = bit32.band(0x0F,inData:byte(1))
+  properties.fluidType = fluidType
+  local fluidLevel = bit32.bor(bit32.lshift(inData:byte(3),8),inData:byte(2))
+  properties.fluidLevel = fluidLevel
+  fluidLevel = fluidLevel * 0.004
+  local fluidCapacityLsB = bit32.bor(bit32.lshift(inData:byte(5),8),inData:byte(4))
+  local fluidCapacityMsB = bit32.bor(bit32.lshift(inData:byte(7),8),inData:byte(6))  
+  local fluidCapacity = bit32.bor(bit32.lshift(fluidCapacityMsB,16),fluidCapacityLsB)
+  properties.fluidCapacity = bit32.rshift(fluidCapacity,1)
+  fluidCapacity = fluidCapacity * 0.1 
+  printf("Fluid level data:\n instance = %d\n type = %d\n level = %3.2f \n capacity = %3.2f\n",fluidInstance, fluidType, fluidLevel, fluidCapacity)
+end
+
+function decodeEngineParameters(inData)
+  PGN_DATA[PGNS.ENGINE_PARAMETERS_PGN] = inData
+end</Source>
+        </SourceFile>
+        <SourceFile>
+          <Name>ota.lua</Name>
+          <Source>local TO_MINS = 
+{
+  getWindReport   = 1,
+  getPGN          = 2
+}
+local FROM_MINS = 
+{
+  windReport      = 1,
+  pgnReport       = 2
+}
+
+function sendReport(min, ref)
+  
+  local fields
+  local index
+  local options = {send = true, log = false}
+
+  if min == FROM_MINS.windReport then
+    fields =
+    {
+      windSpeed     = properties.windSpeed,
+      windAngle     = properties.windAngle,
+      windReference = properties.windReference
+    }    
+  
+  elseif min == FROM_MINS.pgnReport then
+    if ref == WIND_PGN then index = PGNS.WIND_PGN
+    elseif ref == TEMPERATURE_PGN then index = PGNS.TEMPERATURE_PGN
+    elseif ref == PRESSURE_PGN then index = PGNS.PRESSURE_PGN
+    elseif ref == FLUID_LEVEL_PGN then index = PGNS.FLUID_LEVEL_PGN
+    elseif ref == ENGINE_PARAMETERS_PGN then index = PGNS.ENGINE_PARAMETERS_PGN
+    else index = PGNS.UNKNOWN_PGN
+    end
+    
+    fields =
+    {
+      pgn     = ref,
+      pgnData = PGN_DATA[index]
+    } 
+  
+  else    
+    print(_NAME, ":FROM MIN ", min, " does not exist")
+  end
+  
+  print(_NAME, ": sending message with MIN: ", min)
+  
+  local refNo, err = messageHandle:send(min, fields, options)
+  
+  if (not err) then
+    print(_NAME, " : Successfully sent message")
+  else
+    print(_NAME, " : message failed to be passed to message queue: ", tostring(err))
+  end  
+end
+
+--
+-- Received to-mobile message "request1"
+--
+function processFwdMessages(args)
+  local refId, error
+  
+  messageType = nil
+  
+  if args.min == TO_MINS.getWindReport then
+    sendReport(FROM_MINS.windReport, 0)
+  elseif args.min == TO_MINS.getPGN then
+    sendReport(FROM_MINS.pgnReport, args.fields.pgn)
+  else
+    print(_NAME, ":TO MIN ", args.min, " does not exist")
+  end
+end</Source>
+        </SourceFile>
+        <SourceFile>
+          <Name>can.lua</Name>
+          <Source>-- Add PGNs to filter table
+function j1939AddPGNs()
+  canPort:add(WIND_PGN)             --Wind data
+  canPort:add(TEMPERATURE_PGN)      --Temperature
+  canPort:add(PRESSURE_PGN)         --Actual pressure
+  canPort:add(ENGINE_PARAMETERS_PGN)--Engine parameters
+  canPort:add(FLUID_LEVEL_PGN)      --Fluid level
+end
+
+function checkCAN()
+  local list = canPort:list()
+  local rpgn,dstr,seq
+  if (list) then
+    for _,pgn in ipairs(list) do
+      rpgn,dstr,seq = canPort:query(pgn)
+      if (rpgn) then
+        if (seq) then
+            printf("PGN: %d, sequence number: %d, raw data: ",rpgn, seq)
+            printf("%02X %02X %02X %02X %02X %02X %02X %02X\n",
+            dstr:byte(1),dstr:byte(2),dstr:byte(3),dstr:byte(4),
+            dstr:byte(5),dstr:byte(6),dstr:byte(7),dstr:byte(8))
+          if rpgn == WIND_PGN then        
+            decodeWindData(dstr)
+            --properties.pgn130306 = dstr
+            --PGN_DATA[PGNS.WIND_PGN] = dstr
+            --print(_NAME, ": Wind data = ", PGN_DATA[PGNS.WIND_PGN], "\n")
+          elseif rpgn == TEMPERATURE_PGN then 
+            decodeTemperatureData(dstr)
+          elseif rpgn == PRESSURE_PGN then 
+            decodePressureData(dstr)
+          elseif rpgn == FLUID_LEVEL_PGN then 
+            decodeFluidLevel(dstr)
+          elseif rpgn == ENGINE_PARAMETERS_PGN then 
+            decodeEngineParameters(dstr)
+          else
+            printf("no method for PGN %d\n\n",rpgn)
+          end
+         else
+          print(_NAME, ": sequence number is invalid\n\n")
+         end
+      end
+    end
+  end
+  canPort:flush(0) -- reset all PGN data to default invalid.
+end</Source>
+        </SourceFile>
+      </SourceFiles>
+    </Service>
+  </Services>
+  <PropertyValues />
+</Project>

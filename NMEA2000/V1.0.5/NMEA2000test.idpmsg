@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MessageDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Services>
+    <Service>
+      <Name>NMEA2000test</Name>
+      <SIN>128</SIN>
+      <ForwardMessages>
+        <Message>
+          <Name>getWindReport</Name>
+          <MIN>1</MIN>
+        </Message>
+        <Message>
+          <Name>getPgn</Name>
+          <MIN>2</MIN>
+          <Fields>
+            <Field xsi:type="UnsignedIntField">
+              <Name>pgn</Name>
+              <Size>18</Size>
+            </Field>
+          </Fields>
+        </Message>
+      </ForwardMessages>
+      <ReturnMessages>
+        <Message>
+          <Name>windReport</Name>
+          <MIN>1</MIN>
+          <Fields>
+            <Field xsi:type="PropertyField">
+              <Name>windSpeed</Name>
+              <SIN>128</SIN>
+              <PIN>3</PIN>
+            </Field>
+            <Field xsi:type="PropertyField">
+              <Name>windAngle</Name>
+              <SIN>128</SIN>
+              <PIN>4</PIN>
+            </Field>
+            <Field xsi:type="PropertyField">
+              <Name>windReference</Name>
+              <SIN>128</SIN>
+              <PIN>5</PIN>
+            </Field>
+          </Fields>
+        </Message>
+        <Message>
+          <Name>pgnReport</Name>
+          <MIN>2</MIN>
+          <Fields>
+            <Field xsi:type="UnsignedIntField">
+              <Name>pgn</Name>
+              <Size>18</Size>
+            </Field>
+            <Field xsi:type="DataField">
+              <Name>pgnData</Name>
+              <Size>64</Size>
+            </Field>
+          </Fields>
+        </Message>
+      </ReturnMessages>
+    </Service>
+  </Services>
+</MessageDefinition>
