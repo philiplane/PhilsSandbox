@@ -3,7 +3,7 @@ import urllib.response
 from urllib.error import HTTPError
 import json
 
-api_key = 'Polestar:978VJRPHC385WRE8'
+api_key = 'x'
 api_address = 'https://microsoft-apiappb01b17607f554d4292d7d17df5186565.azurewebsites.net:443/api/'
 
 StartDate = '2015-12-09'
@@ -25,9 +25,9 @@ ShipReportECABetweenDates = api_address + 'ShipReportECABetweenDates?' + 'StartD
 ShipReportECA = api_address + 'ShipReportECA?' + '&api_key=' + api_key
 ShipReport = api_address + 'ShipReport?' + '&api_key=' + api_key
 
-req = urllib.request.Request(ShipReportECABetweenDates)
+# req = urllib.request.Request(ShipReportECABetweenDates)
 # req = urllib.request.Request(ShipReportBetweenDates)
-# req = urllib.request.Request(ShipReportECA)
+req = urllib.request.Request(ShipReportECA)
 # req = urllib.request.Request(ShipReport)
 
 try:
@@ -37,19 +37,19 @@ try:
     for item in json_data:
         print("----------------------------------")
         print("Ship name: " + item["ShipName"])
-        # print("IMO number: " + item["ShipIMO"])
+        print("IMO number: " + item["ShipIMO"])
         for item2 in item["Position"]:
-            # print("Record time: " + item2["RecordTime"][:10] + " " + item2["RecordTime"][11:])
-            # print("Latitude: " + str(item2["Latitude"]))
-            # print("Longitude: " + str(item2["Longitude"]))
-            # print("Speed: " + str(item2["Speed"]))
-            # print("Heading: " + str(item2["Heading"]))
+            print("Record time: " + item2["RecordTime"][:10] + " " + item2["RecordTime"][11:])
+            print("Latitude: " + str(item2["Latitude"]))
+            print("Longitude: " + str(item2["Longitude"]))
+            print("Speed: " + str(item2["Speed"]))
+            print("Heading: " + str(item2["Heading"]))
             for item3 in item2["DataFields"]:
-                # print(item2["RecordTime"][:10] + " " + item2["RecordTime"][11:])
-                # print(item3["FieldName"] + ": " + str(item3["Value"]) + " " + item3["Unit"])
-                if item3["FieldName"] == "CO2":
-                   print(item2["RecordTime"][:10] + " " + item2["RecordTime"][11:])
-                   print(str(item3["Value"]))
+                print(item2["RecordTime"][:10] + " " + item2["RecordTime"][11:])
+                print(item3["FieldName"] + ": " + str(item3["Value"]) + " " + item3["Unit"])
+                # if item3["FieldName"] == "CO2":
+                #   print(item2["RecordTime"][:10] + " " + item2["RecordTime"][11:])
+                #   print(str(item3["Value"]))
                 # if item3["FieldName"] == "SOx":
                    # print(item2["RecordTime"][:10] + " " + item2["RecordTime"][11:])
                    # print(str(item3["Value"]))
