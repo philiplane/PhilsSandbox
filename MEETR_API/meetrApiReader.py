@@ -6,15 +6,15 @@ import json
 api_key = 'Polestar:978VJRPHC385WRE8'
 api_address = 'https://microsoft-apiappb01b17607f554d4292d7d17df5186565.azurewebsites.net:443/api/'
 
-StartDate = '2016-03-24'
+StartDate = '2016-09-09'
 StartHour = '00'
 StartMinute = '00'
 StartSecond = '00'
 StartDateTime = StartDate + '%20' + StartHour + '%3A' + StartMinute + '%3A' + StartSecond
 
-EndDate = '2016-03-31'
-EndHour = '14'
-EndMinute = '30'
+EndDate = '2016-09-16'
+EndHour = '00'
+EndMinute = '00'
 EndSecond = '00'
 EndDateTime = EndDate + '%20' + EndHour + '%3A' + EndMinute + '%3A' + EndSecond
 
