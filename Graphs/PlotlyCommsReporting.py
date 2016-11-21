@@ -11,7 +11,7 @@ def connect_to_database():
     try:
         db = "commservice"
         # print "Connecting to:", db
-        conn = psycopg2.connect(host="*.*.*.*",
+        conn = psycopg2.connect(host="*",
                                 database=db,
                                 user="*",
                                 password="*")
@@ -68,7 +68,7 @@ def get_y_value(rows):
 
 
 def get_date():
-    return str(datetime.date.today())
+    return str(datetime.datetime.now())
 
 
 def update_plotly(x_value, rows):

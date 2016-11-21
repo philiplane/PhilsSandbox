@@ -72,7 +72,7 @@ def get_y_value(rows):
 
 
 def get_date():
-    return str(datetime.date.today())
+    return str(datetime.datetime.now())
 
 
 def update_plotly(x_value, rows):

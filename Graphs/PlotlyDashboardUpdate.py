@@ -5,7 +5,7 @@ import psycopg2
 import plotly.plotly as py
 import plotly.graph_objs as go
 
-program_commands_query = """select Count(*)
+program_commands_comms_query = """select Count(*)
                         from web_command cm
                         inner join web_communicator c on c.id = communicator_id
                         where status='COMPLETED'
@@ -14,7 +14,7 @@ program_commands_query = """select Count(*)
                         and (c.channel_id=12 or c.channel_id=14)
                         group by command_type
                         order by command_type"""
-communicators_reporting_query = """select
+communicators_reporting_comms_query = """select
                         concat((count
                          (case when (protocol = 'Honeywell IsatM2M') and (last_timestamp > (current_timestamp - interval '24 hours')) then 1 end))
                          * 100
@@ -42,7 +42,7 @@ communicators_reporting_query = """select
                          as IsatDataPro
                         from communicator_reporting_status s
                         inner join web_communicator c on s.communicator_id = c.id"""
-total_communicators_query = """select
+total_communicators_comms_query = """select
                           count(case when protocol = 'Honeywell IsatM2M' then 1 end) as Honeywell,
                           count(case when protocol = 'Pole Star AIS' then 1 end) as AIS,
                           count(case when protocol = 'SatC (Thrane LES)' then 1 end) as SatC,
@@ -51,18 +51,68 @@ total_communicators_query = """select
                           from communicator_reporting_status s
                           inner join web_communicator c on s.communicator_id = c.id
                           where c.id in (select communicator_id from web_subscriber)"""
-reports = [[program_commands_query, 'ProgramCommand-graph'],
-           [communicators_reporting_query, 'Comms-Nov16'],
-           [total_communicators_query, 'TotalCommunicatorsInCommservice']]
+communicators_reporting_cas_query = """select
+                        concat((count
+                         (case when (ms.channel_uri = '/api/v1/channel/21') and (last_position_timestamp_gnss > (current_timestamp - interval '24 hours')) then 1 end))
+                         * 100
+                         / (count(case when (ms.channel_uri = '/api/v1/channel/21') then 1 end)),'%')
+                         as Honeywell,
+                        concat((count
+                         (case when (ms.channel_uri = '/api/v1/channel/13') and (last_position_timestamp_gnss > (current_timestamp - interval '24 hours')) then 1 end))
+                         * 100
+                         / (count(case when (ms.channel_uri = '/api/v1/channel/13') then 1 end)),'%')
+                         as AIS,
+                        concat((count
+                         (case when (ms.channel_uri = '/api/v1/channel/12' or ms.channel_uri = '/api/v1/channel/14') and (last_position_timestamp_gnss > (current_timestamp - interval '24 hours')) then 1 end))
+                         * 100
+                         / (count(case when (ms.channel_uri = '/api/v1/channel/12' or ms.channel_uri = '/api/v1/channel/14') then 1 end)),'%')
+                         as SatC,
+                        concat((count
+                         (case when (ms.channel_uri = '/api/v1/channel/17' or ms.channel_uri = '/api/v1/channel/23') and (last_position_timestamp_gnss > (current_timestamp - interval '24 hours')) then 1 end))
+                         * 100
+                         / (count(case when (ms.channel_uri = '/api/v1/channel/17' or ms.channel_uri = '/api/v1/channel/23') then 1 end)),'%')
+                         as IsatM2M,
+                        concat((count
+                         (case when (ms.channel_uri = '/api/v1/channel/15' or ms.channel_uri = '/api/v1/channel/22' or ms.channel_uri = '/api/v1/channel/27') and (last_position_timestamp_gnss > (current_timestamp - interval '24 hours')) then 1 end))
+                         * 100
+                         / (count(case when (ms.channel_uri = '/api/v1/channel/15' or ms.channel_uri = '/api/v1/channel/22' or ms.channel_uri = '/api/v1/channel/27')then 1 end)),'%')
+                         as IsatDataPro
+                        from mobile_subscription ms
+                        inner join subscription s on s.id = ms.subscription_id
+                        inner join ship sh on sh.id = s.ship_id
+                        inner join account a on sh.account_id = a.id
+                        where ms.status='ACTIVE'
+                        and a.company_name not ilike '%trial%'"""
+total_communicators_cas_query = """select
+                         count(case when ms.channel_uri = '/api/v1/channel/21' then 1 end) as Honeywell,
+                         count(case when ms.channel_uri = '/api/v1/channel/13' then 1 end) as AIS,
+                         count(case when ms.channel_uri = '/api/v1/channel/12' or ms.channel_uri = '/api/v1/channel/14' then 1 end) as SatC,
+                         count(case when ms.channel_uri = '/api/v1/channel/17' or ms.channel_uri = '/api/v1/channel/23' then 1 end) as DAP,
+                         count(case
+                          when ms.channel_uri = '/api/v1/channel/15'
+                          or ms.channel_uri = '/api/v1/channel/22'
+                          or ms.channel_uri = '/api/v1/channel/27'
+                          then 1 end) as IGWS
+                        from mobile_subscription ms
+                        inner join subscription s on s.id = ms.subscription_id
+                        inner join ship sh on sh.id = s.ship_id
+                        inner join account a on sh.account_id = a.id
+                        where ms.status='ACTIVE'
+                         and a.company_name not ilike '%trial%' """
+reports = [["commservice", program_commands_comms_query, 'ProgramCommand-graph'],
+           ["commservice", communicators_reporting_comms_query, 'Comms-Nov16'],
+           ["commservice", total_communicators_comms_query, 'TotalCommunicatorsInCommservice'],
+           ["cas", communicators_reporting_cas_query, 'CAS-Nov16'],
+           ["cas", total_communicators_cas_query, 'TotalCommunicatorsInCAS']]
 network_name = ['Honeywell IsatM2M', 'AIS', 'Inmarsat-C', 'Skywave DAP-XML', 'Skywave IGWS']
 
 
-def connect_to_database():
+def connect_to_database(database):
     try:
-        conn = psycopg2.connect(host="10.11.30.101",
-                                database="commservice",
-                                user="postgres",
-                                password="rh81dg5j")
+        conn = psycopg2.connect(host="*",
+                                database=database,
+                                user="*",
+                                password="*")
         return conn
     except psycopg2.DatabaseError as dberr:
         print "Connection error: ", dberr
@@ -87,7 +137,7 @@ def update_plotly(rows, filename):
             data = go.Data([trace])
         else:
             trace = []
-            for n in range(0, 5):
+            for n in range(0, len(network_name)):
                 trace.append(go.Scatter(x=[date_time_now], y=[row[n]], name=network_name[n]))
             data = go.Data([trace[0], trace[1], trace[2], trace[3], trace[4]])
         done = py.plot(data, filename=filename, fileopt='extend')
@@ -96,9 +146,9 @@ def update_plotly(rows, filename):
 
 
 def main():
-    db_connection = connect_to_database()
     for report_info in reports:
-        query_response = run_query(db_connection, report_info[0])
-        update_plotly(query_response, report_info[1])
+        db_connection = connect_to_database(report_info[0])
+        query_response = run_query(db_connection, report_info[1])
+        update_plotly(query_response, report_info[2])
 
 main()
