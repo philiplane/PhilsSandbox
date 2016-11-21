@@ -11,10 +11,10 @@ def connect_to_database():
     try:
         db = "commservice"
         # print "Connecting to:", db
-        conn = psycopg2.connect(host="*.*.*.*",
+        conn = psycopg2.connect(host="10.11.30.101",
                                 database=db,
-                                user="*",
-                                password="*")
+                                user="postgres",
+                                password="rh81dg5j")
         return conn
     except psycopg2.DatabaseError as dberr:
         print "Connection error:", dberr
