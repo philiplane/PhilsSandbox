@@ -99,20 +99,20 @@ total_communicators_cas_query = """select
                         inner join account a on sh.account_id = a.id
                         where ms.status='ACTIVE'
                          and a.company_name not ilike '%trial%' """
-reports = [["commservice", program_commands_comms_query, 'ProgramCommand-graph'],
-           ["commservice", communicators_reporting_comms_query, 'Comms-Nov16'],
+reports = [["commservice", program_commands_comms_query, 'ProgramCommandsSent'],
+           ["commservice", communicators_reporting_comms_query, 'CommsReportingStatus'],
            ["commservice", total_communicators_comms_query, 'TotalCommunicatorsInCommservice'],
-           ["cas", communicators_reporting_cas_query, 'CAS-Nov16'],
+           ["cas", communicators_reporting_cas_query, 'CASReportingStatus'],
            ["cas", total_communicators_cas_query, 'TotalCommunicatorsInCAS']]
 network_name = ['Honeywell IsatM2M', 'AIS', 'Inmarsat-C', 'Skywave DAP-XML', 'Skywave IGWS']
 
 
 def connect_to_database(database):
     try:
-        conn = psycopg2.connect(host="*",
+        conn = psycopg2.connect(host="10.11.30.101",
                                 database=database,
-                                user="*",
-                                password="*")
+                                user="postgres",
+                                password="rh81dg5j")
         return conn
     except psycopg2.DatabaseError as dberr:
         print "Connection error: ", dberr
@@ -132,7 +132,7 @@ def update_plotly(rows, filename):
     print "Date & time:", date_time_now
     for row in rows:
         print "Query data:", row
-        if filename == 'ProgramCommand-graph':
+        if filename == reports[0][2]:
             trace = go.Scatter(x=[date_time_now], y=[row[0]])
             data = go.Data([trace])
         else:
